@@ -1,0 +1,30 @@
+<html>
+    <body>
+        <div><button onclick="shuffle()">Shuffle!</button></div>
+        <div><canvas id="canvas" width="1000" height="1000"></canvas></div>
+
+        <script>
+            function shuffle() {
+                var canvas = document.getElementById('canvas');
+                var ctx = canvas.getContext('2d');
+
+                for (i = 0; i < 100; i++) { 
+                    for(j=0; j<100; j++) {
+                        ctx.fillStyle = getRandomColor();
+                        ctx.fillRect(i*10, j*10, 10, 10);
+                    }
+                }
+            }
+            function getRandomColor() {
+                var letters = '0123456789ABCDEF';
+                var color = '#';
+                for (var i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+            return color;
+            }
+
+        </script>
+    </body>
+
+</html>
