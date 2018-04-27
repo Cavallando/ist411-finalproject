@@ -1,20 +1,29 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
-
+import { Stage, Layer, Rect, Text } from 'react-konva';
+import Pixel from './components/Pixel/Pixel';
+import {Container, Row, Col} from 'react-grid-system';
+import Palette from './components/Palette/Palette';
+import Canvas from './components/Canvas/Canvas';
 class App extends Component {
+  state = {
+    paintColor: "#FFFFFF"
+  }
+
+  paletteCallback = (color) => {
+    this.setState({
+      paintColor: color
+    });
+  }
+
   render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
+    return(
+      <div>
+        <Palette callbackFromApp={this.paletteCallback} />
+        <Canvas paintColor={this.state.paintColor} />
       </div>
-    );
+    );  
   }
 }
 
