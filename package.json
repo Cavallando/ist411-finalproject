@@ -3,15 +3,27 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "auth0-js": "^9.5.0",
+    "jwt-decode": "^2.2.0",
     "konva": "^2.0.3",
+    "nodemon": "^1.17.3",
     "react": "^16.3.1",
+    "react-bootstrap": "^0.32.1",
     "react-color": "^2.14.1",
     "react-devtools": "^3.2.1",
     "react-dom": "^16.3.1",
+    "react-dropdown": "^1.4.2",
     "react-grid-system": "^3.2.3",
     "react-konva": "^1.7.2",
+    "react-native": "^0.55.3",
     "react-paint": "^1.0.1",
-    "react-scripts": "1.1.4"
+    "react-painter-lite": "^1.0.5",
+    "react-router": "^4.2.0",
+    "react-router-dom": "^4.2.2",
+    "react-scripts": "1.1.4",
+    "react-simple-dropdown": "^3.2.0",
+    "react-sketch": "^0.4.4",
+    "reactstrap": "^5.0.0"
   },
   "scripts": {
     "start": "react-scripts start",
