@@ -1,7 +1,12 @@
 import React, { Component } from 'react';
 import { Panel, ControlLabel, Glyphicon } from 'react-bootstrap';
 
-class Profile extends Component {
+class UserProfile extends Component {
+  constructor(props) {
+    super(props);
+    this.componentWillMount = this.componentWillMount.bind(this);
+  }
+
   componentWillMount() {
     this.setState({ profile: {} });
     
@@ -36,4 +41,4 @@ class Profile extends Component {
   }
 }
 
-export default Profile;
+export default UserProfile;

@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import { Navbar, NavDropdown, MenuItem, Nav, NavItem } from 'react-bootstrap';
-import Palette from './Palette';
-import '../assets/css/CustomNav.css'
-import undoIcon from '../assets/img/undo.png';
-import redoIcon from '../assets/img/redo.png';
-import profileIcon from '../assets/img/profile.png';
-import { getUserId, getAllPaintingsByUserId } from '../utils/PaintifyApi';
+import Palette from '../Palette/Palette';
+import '../../assets/css/CustomNav.css'
+import undoIcon from '../../assets/img/undo.png';
+import redoIcon from '../../assets/img/redo.png';
+import profileIcon from '../../assets/img/profile.png';
+import { getUserId, getAllPaintingsByUserId } from '../../utils/PaintifyApi';
 
 class CustomNav extends Component {
     constructor(props) {
@@ -16,8 +16,6 @@ class CustomNav extends Component {
             paintingList: [],
             isAuthenticated: false,
         }
-        getUserId(this.props.profile.email).then(result => this.setState({ mongoUserId: result}));
-        getAllPaintingsByUserId(this.state.mongoUserId).then(result => this.setState({ paintingList: result }));
     }
 
     paletteCallback = (color) => {
@@ -27,7 +25,6 @@ class CustomNav extends Component {
 
     onSelect = (eventKey, syntheticEvent) => {
         if (eventKey === 5.1) {
-
         } else if (eventKey === 5.2) {
 
         } else if (eventKey === 5.3) {
