@@ -6,6 +6,9 @@ const jwt = require('express-jwt');
 const jwks = require('jwks-rsa');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+var MongoClient = require('mongodb').MongoClient;
+
+var db;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -20,70 +23,34 @@ const authCheck = jwt({
         jwksUri: "https://cavallaro.auth0.com/.well-known/jwks.json"
     }),
     // This is the identifier we set when we created the API
-    audience: 'https://paintify.com',
+    aud: `https://paintify.com/`,
     issuer: 'https://cavallaro.auth0.com/',
     algorithms: ['RS256']
 });
 
-app.get('/api/jokes/food', (req, res) => {
-  let foodJokes = [
-  {
-    id: 99991,
-    joke: "When Chuck Norris was a baby, he didn't suck his mother's breast. His mother served him whiskey, straight out of the bottle."
-  },
-  {
-    id: 99992,
-    joke: 'When Chuck Norris makes a burrito, its main ingredient is real toes.'
-  },
-  {
-    id: 99993,
-    joke: 'Chuck Norris eats steak for every single meal. Most times he forgets to kill the cow.'
-  },
-  {
-    id: 99994,
-    joke: "Chuck Norris doesn't believe in ravioli. He stuffs a live turtle with beef and smothers it in pig's blood."
-  },
-  {
-    id: 99995,
-    joke: "Chuck Norris recently had the idea to sell his urine as a canned beverage. We know this beverage as Red Bull."
-  },
-  {
-    id: 99996,
-    joke: 'When Chuck Norris goes to out to eat, he orders a whole chicken, but he only eats its soul.'
-  }
-  ];
-  res.json(foodJokes);
-})
+app.get('/api/user', authCheck, (req,res) => {
+  let paintings = db.collection("users").findOne({"email": req.query.email}, function(err, results){
+      res.json(results)
+  });
+});
 
-app.get('/api/jokes/celebrity', authCheck, (req,res) => {
-  let CelebrityJokes = [
-  {
-    id: 88881,
-    joke: 'As President Roosevelt said: "We have nothing to fear but fear itself. And Chuck Norris."'
-  },
-  {
-    id: 88882,
-    joke: "Chuck Norris only let's Charlie Sheen think he is winning. Chuck won a long time ago."
-  },
-  {
-    id: 88883,
-    joke: 'Everything King Midas touches turnes to gold. Everything Chuck Norris touches turns up dead.'
-  },
-  {
-    id: 88884,
-    joke: 'Each time you rate this, Chuck Norris hits Obama with Charlie Sheen and says, "Who is winning now?!"'
-  },
-  {
-    id: 88885,
-    joke: "For Charlie Sheen winning is just wishful thinking. For Chuck Norris it's a way of life."
-  },
-  {
-    id: 88886,
-    joke: "Hellen Keller's favorite color is Chuck Norris."
-  }
-  ];
-  res.json(CelebrityJokes);
-})
+app.get('/api/painting', authCheck, (req,res) => {
+  let paintings = db.collection("paintings").findOne({"painting_id": req.query.painting_id}, function(err, results) {
+    res.json(results)
+  });
+});
 
-app.listen(3333);
-console.log('Listening on localhost:3333');
+app.get('/api/user/paintings', authCheck, (req,res) => {
+  let paintings = db.collection("paintings").find({"user_doc_id":req.query.id}).toArray(function(err, results){
+    res.json(results)
+  });
+});
+
+MongoClient.connect('mongodb://admin:admin@ds155577.mlab.com:55577/paintify', (err,client) => {
+  if(err) return console.log(err);
+  db = client.db('paintify');
+  app.listen(3333, () => {
+    console.log('Listening on localhost:3333');
+  });
+
+});

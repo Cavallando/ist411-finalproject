@@ -1,24 +1,42 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Route } from 'react-router';
-import { BrowserRouter } from 'react-router-dom';
+import { Router, Route,Redirect } from 'react-router-dom';
 
 import './assets/css/index.css';
 import App from './App';
 import registerServiceWorker from './assets/js/registerServiceWorker';
-import { requireAuth } from './utils/AuthService';
-import Paintings from './components/Paintings';
+import Auth from './utils/Auth/Auth';
 import Callback from './components/Callback';
+import Profile from './components/Profile';
+import history from './utils/history';
+
+const auth = new Auth();
+
+const handleAuthentication = ({location}) => {
+  if (/access_token|id_token|error/.test(location.hash)) {
+    auth.handleAuthentication();
+  }
+}
+
 const Root = () => {
     return (
       <div className="container">
-        <BrowserRouter ref = {(c) => this.context = c} >
+        <Router history={history} >
           <div>
-            <Route path="/" component={App}/>
-            <Route path="/paintings" component={Paintings} onEnter={requireAuth} />
-            <Route path="/callback" component={Callback} />
+            <Route path="/" component={(props) => <App auth={auth} {...props}/>}/>
+            <Route path="/profile" render={(props) => (
+              !auth.isAuthenticated() ? (
+                <Redirect to="/"/>
+              ) : (
+                <Profile auth={auth} {...props} />
+              )
+            )} />
+            <Route path="/callback" render={(props) => {
+              handleAuthentication(props);
+              return <Callback {...props} /> 
+            }}/> 
           </div>
-        </BrowserRouter>
+        </Router>
       </div>
     )
 }

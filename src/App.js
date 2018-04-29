@@ -1,13 +1,9 @@
 import React, { Component } from 'react';
-import {Button} from 'react-bootstrap';
 import { SketchField, Tools } from 'react-sketch';
 
 import IntroModal from './components/IntroModal';
-import logo from './assets/img/logo.svg';
 import './assets/css/App.css';
-import { withRouter } from 'react-router-dom';
 import CustomNav from './components/CustomNav';
-import {isLoggedIn } from './utils/AuthService';
 
 class App extends Component {
   constructor(props) {
@@ -17,9 +13,13 @@ class App extends Component {
       tool: Tools.Pencil,
       canUndo: false,
       canRedo: false,
+      paintingID: -1,
+      currentPainting: {},
+      paintingLoaded: false,
+      profile: {},
+      myPaintings: []
     }
   }
-
 
   _paletteCallback = (color) => {
     this.setState({
@@ -29,17 +29,17 @@ class App extends Component {
 
   _toolCallback = (eventKey) => {
     var toolSelection = Tools.Pencil;
-    if (eventKey == 4.1) {
+    if (eventKey === 4.1) {
       toolSelection = Tools.Select;
-    } else if (eventKey == 4.2) {
+    } else if (eventKey === 4.2) {
       toolSelection = Tools.Pencil;
-    } else if (eventKey == 4.3) {
+    } else if (eventKey === 4.3) {
       toolSelection = Tools.Line;
-    } else if (eventKey == 4.4) {
+    } else if (eventKey === 4.4) {
       toolSelection = Tools.Rectangle;
-    } else if (eventKey == 4.5) {
+    } else if (eventKey === 4.5) {
       toolSelection = Tools.Circle;
-    } else if (eventKey == 4.6) {
+    } else if (eventKey === 4.6) {
       toolSelection = Tools.Pan;
     }
     this.setState({tool: toolSelection});
@@ -63,24 +63,45 @@ class App extends Component {
       canRedo: this._canvas.canRedo()
     });
   }
+
+  _trashCallback = () => {
+  }
+
+  _saveCallback = () => {
+    this.state.myPaintings.push(this._canvas.toJSON());
+  }
+
+  _loadCallback = (id) => {
+    this.api.getPaintingById(id).then( (result) => this.setState({currentPainting: result.paint_data}));
+    if(this.state.currentPainting !== {}) {
+      this.setState({paintingLoaded:true});
+    }
+  }
+
   render() {
-    const showModal = (!isLoggedIn() ? (<IntroModal show={true} />):null);
+    const {isAuthenticated} = this.props.auth;
+    const showModal = (!isAuthenticated() ? (<IntroModal auth={this.props.auth} show={true} />):null);
     return (
       <div>
         {showModal}
-        <CustomNav paletteCallback={this._paletteCallback} 
+        <CustomNav auth={this.props.auth}
+                  profile={this.state.profile}
+                  paletteCallback={this._paletteCallback} 
                   toolCallback={this._toolCallback} 
                   undoCallback={this._undoCallback}
-                  redoCallback={this._redoCallback}/>
+                  redoCallback={this._redoCallback}
+                  saveCallback={this._saveCallback}
+                  loadCallback={this._loadCallback}/>
         <SketchField
           ref={(c) => this._canvas = c}
           height='100%'
           tool={this.state.tool}
           lineColor={this.state.paintColor}
-          lineWidth={3} />
+          lineWidth={3}
+          value={this.state.paintingLoaded ? this.state.loadPainting:""} />
       </div>
     );
   }
 }
 
-export default withRouter(App);
+export default App;

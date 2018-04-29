@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 import {Modal, Button} from 'react-bootstrap';
-import {login} from '../utils/AuthService';
 
 class IntroModal extends Component {
     constructor(props) {
@@ -14,10 +13,10 @@ class IntroModal extends Component {
     }
 
     handleLogin= ()=> {
-        login();
+        this.props.auth.login();
     }
+    
     render() {
-
         return (
             <Modal show={this.state.showIntro} onHide={this.handleClose}>
                 <Modal.Header closeButton>
