@@ -7,27 +7,36 @@ import appRoutes from "../../routes/app.jsx";
 import IntroModal from "../../components/Modals/IntroModal";
 import UserProfile from "../../views/UserProfile/UserProfile";
 import AppView from "../../views/App/App";
-import {getUserById, insertNewUser, getUserByEmail } from '../../utils/PaintifyApi';
+import { getUserById, insertNewUser, getUserByEmail } from '../../utils/PaintifyApi';
 
 class App extends Component {
   constructor(props) {
     super(props);
-    this.state = this.initState();
+    this.state = {
+      paintColor: "#000000",
+      tool: this.props.tool,
+      canUndo: false,
+      canRedo: false,
+      controlledValue: null,
+      backgroundColor: 'transparent',
+      fillWithBackgroundColor: false,
+      profile: {},
+      userId: null,
+      userPaintings: []
+    };;
   }
 
-  initState() {
-    var state = { paintColor: "#000000", 
-                  tool: this.props.tool,
-                  canUndo: false,
-                  canRedo: false,
-                  controlledValue: null,
-                  backgroundColor: 'transparent',
-                  fillWithBackgroundColor: false, 
-                  authProfile: {},
-                  userId: null,
-                  userPaintings: []};
-    return state;
-  };
+  componentWillMount() {
+    this.setState({ profile: {} });
+    const { userProfile, getProfile } = this.props.auth;
+    if (!userProfile) {
+      getProfile((err, profile) => {
+        this.setState({ profile });
+      });
+    } else {
+      this.setState({ profile: userProfile });
+    }
+  }
 
   goTo(route) {
     this.props.history.replace(`/${route}`)
@@ -86,14 +95,14 @@ class App extends Component {
 
   _trashCallback = () => {
     this._canvas.clear();
-        this._canvas.setBackgroundFromDataUrl('');
-        this.setState({
-            controlledValue: null,
-            backgroundColor: 'transparent',
-            fillWithBackgroundColor: false,
-            canUndo: this._canvas.canUndo(),
-            canRedo: this._canvas.canRedo()
-        })
+    this._canvas.setBackgroundFromDataUrl('');
+    this.setState({
+      controlledValue: null,
+      backgroundColor: 'transparent',
+      fillWithBackgroundColor: false,
+      canUndo: this._canvas.canUndo(),
+      canRedo: this._canvas.canRedo()
+    })
   }
 
   _saveCallback = () => {
@@ -113,12 +122,13 @@ class App extends Component {
 
   render() {
     const { isAuthenticated } = this.props.auth;
+    const { profile } = this.state;
     return (
       <div className="wrapper">
         {!isAuthenticated() && <IntroModal show={true} auth={this.props.auth} />}
         <div id="main-panel" className="main-panel" ref="mainPanel">
           <CustomNav auth={this.props.auth}
-            profile={this.state.authProfile}
+            profile={profile}
             paletteCallback={this._paletteCallback}
             toolCallback={this._toolCallback}
             undoCallback={this._undoCallback}
@@ -128,25 +138,24 @@ class App extends Component {
             trashCallback={this._trashCallback}
             {...this.props} />
           <Switch>
-              <Route path='/app' render={() => {
-                  //handleAuthentication(props);
-                  if(localStorage.getItem('access_token') && localStorage.getItem('id_token'))
-                    this.props.auth.handleAuthentication();
-                  return(<SketchField
-                          ref={(c) => this._canvas = c}
-                          height='100%'
-                          tool={this.state.tool}
-                          lineColor={this.state.paintColor}
-                          lineWidth={3}
-                          value={this.state.paintingLoaded ? this.state.loadPainting:""}
-                        />);
-              }}/>
-              {isAuthenticated() ?
-              <Route path='/user' render={(props) => {
-                    return(<UserProfile auth={this.props.auth} profile={this.state.profile} tool={this.state.tool} paintColor={this.state.paintColor} {...this.props} />);
-                }}/> :
-                <Redirect to='/app' />
-                }
+            <Route path='/app' render={() => {
+              return (<SketchField
+                ref={(c) => this._canvas = c}
+                height='100%'
+                tool={this.state.tool}
+                lineColor={this.state.paintColor}
+                lineWidth={3}
+                value={this.state.paintingLoaded ? this.state.loadPainting : ""}
+              />);
+            }} />
+            <Route path="/profile" render={(props) => (
+              !isAuthenticated() ? (
+                <Redirect to="/app" />
+              ) : (
+                  <UserProfile auth={this.props.auth} profile={profile} {...props} />
+                )
+            )} />
+            }
           </Switch>
         </div>
       </div>
