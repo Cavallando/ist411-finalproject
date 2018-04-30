@@ -9,10 +9,8 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      paintColor: "#000000",
+      paintColor:"#000000",
       tool: Tools.Pencil,
-      canUndo: false,
-      canRedo: false,
       paintingID: -1,
       currentPainting: {},
       paintingLoaded: false,
@@ -21,61 +19,9 @@ class App extends Component {
     }
   }
 
-  _paletteCallback = (color) => {
-    this.setState({
-      paintColor: color
-    });
-  }
-
-  _toolCallback = (eventKey) => {
-    var toolSelection = Tools.Pencil;
-    if (eventKey === 4.1) {
-      toolSelection = Tools.Select;
-    } else if (eventKey === 4.2) {
-      toolSelection = Tools.Pencil;
-    } else if (eventKey === 4.3) {
-      toolSelection = Tools.Line;
-    } else if (eventKey === 4.4) {
-      toolSelection = Tools.Rectangle;
-    } else if (eventKey === 4.5) {
-      toolSelection = Tools.Circle;
-    } else if (eventKey === 4.6) {
-      toolSelection = Tools.Pan;
-    }
-    this.setState({tool: toolSelection});
-  }
-
-  _undoCallback = () => {
-    if(this._canvas.canUndo()) {
-      this._canvas.undo();
-    }
-    this.setState({
-      canUndo: this._canvas.canUndo(),
-      canRedo: this._canvas.canRedo()
-    });
-  }
-  _redoCallback = () => {
-    if(this._canvas.canRedo()) {
-      this._canvas.redo();
-    }
-    this.setState({
-      canUndo: this._canvas.canUndo(),
-      canRedo: this._canvas.canRedo()
-    });
-  }
-
-  _trashCallback = () => {
-  }
-
-  _saveCallback = () => {
-    this.state.myPaintings.push(this._canvas.toJSON());
-  }
-
-  _loadCallback = (id) => {
-    this.api.getPaintingById(id).then( (result) => this.setState({currentPainting: result.paint_data}));
-    if(this.state.currentPainting !== {}) {
-      this.setState({paintingLoaded:true});
-    }
+  static getDerivedStateFromProps(nextProps, prevState) {
+    return({tool: nextProps.tool,
+          paintColor: nextProps.paintColor});
   }
 
   render() {
