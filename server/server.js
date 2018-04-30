@@ -35,6 +35,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 
+
 //now we can set the route path & initialize the API
 router.get('/', function (req, res) {
   res.json({ message: 'API Initialized!' });
@@ -79,17 +80,17 @@ router.route('/user').get(authCheck, function (req, res) {
 
   //function getUserPaintingsById(id) 
   router.route('/users/paintings/:user_id').get(authCheck, function (req, res) {
-    Painting.find({"owner_id":req.params.user_id}, function(err, user) {
+    Painting.find({"owner_id":req.params.user_id}, function(err, painting) {
       if (err) res.send(err);
-      res.json(user)
+      res.json(painting);
     });
   });
 
   //function updateUserPaintings(userId, paintingList)
   router.route('/users/paintings/update/:user_id')
     .post(authCheck, function(req, res){
-      User.findOneAndUpdate({"user_id": req.params.user_id}, req.paintingList, {upsert:true}, function(err, doc){
-        if (err) return res.send(500, { error: err });
+      User.findOneAndUpdate({"_id": req.params.user_id}, { $set: { "paintings" : req.body} }, {upsert:true}, function(err, doc){
+        if (err) return res.send(err);
         return res.send("User Painting List successfully updated");
       });
     });
@@ -123,10 +124,9 @@ router.route('/user').get(authCheck, function (req, res) {
     painting._id = new ObjectID();
     painting.owner_id = req.params.owner_id;
     painting.date_created = Date.now();
-    console.log(req.paintingName);
-    painting.painting_name=req.paintingName;
+    painting.painting_name=req.body.painting_name;
     painting.last_edited_by = req.params.owner_id;
-    painting.paint_data = req.paintData;
+    painting.paint_data = req.body.paint_data;
     painting.save(function(err,data) {
       if (err) return res.send(err);
       return res.json(painting._id);

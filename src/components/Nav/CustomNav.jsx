@@ -7,9 +7,10 @@ import redoIcon from '../../assets/img/redo.png';
 import profileIcon from '../../assets/img/profile.png';
 import trashIcon from '../../assets/img/trash.png';
 import createIcon from '../../assets/img/create.png';
-import { getUserByEmail, getUserPaintingsById } from '../../utils/PaintifyApi';
+import { updateUserPaintings, getUserByEmail, getUserPaintingsById } from '../../utils/PaintifyApi';
 import TrashModal from '../Modals/TrashModal';
 import NewPaintingModal from '../Modals/NewPaintingModal';
+import SavePaintingModal from '../Modals/SavePaintingModal';
 
 class CustomNav extends Component {
     constructor(props) {
@@ -19,8 +20,10 @@ class CustomNav extends Component {
             userId: "",
             showTrashModal: false,
             showPaintingModal: false,
+            showSaveModal: this.props.showSaveModal,
             currentPainting: this.props.currentPainting,
             userPaintingList: [],
+            userPaintingIdList:[],
             profile: profile
         }
         this.componentDidUpdate= this.componentDidUpdate.bind(this);
@@ -50,10 +53,16 @@ class CustomNav extends Component {
     _navNewPaintingCallback = (name) => {
         var cur = this.state.currentPainting;
         cur.paintingName = name;
-        this.setState({ cur,showPaintingModal: false });
-        this.props.createCallback(name);
+        this.setState({ cur, showPaintingModal: false});
+        this.props.createCallback(cur);
     }
 
+    _navSaveNewPaintingCallback = (name) => {
+        var cur = this.state.currentPainting;
+        cur.paintingName = name;
+        this.setState({ cur,showSaveModal:false});
+        this.props.saveCallback(this.state.userId,cur);
+    }
 
     onSelect = (eventKey, syntheticEvent) => {
         if (eventKey === 5.1) {
@@ -82,12 +91,11 @@ class CustomNav extends Component {
         this.setState({ showPaintingModal: true });
     }
     save = () => {
-        console.log(this.state.userId);
-        this.props.saveCallback(this.state.userId);
+        this.props.saveCallback(this.userId,this.state.currentPainting,this.state.userPaintingList);
     }
 
     static getDerivedStateFromProps(nextProps, prevState) {
-        var state = {...prevState, currentPainting: nextProps.currentPainting};
+        var state = {...prevState, showSaveModal:nextProps.showSaveModal,currentPainting: nextProps.currentPainting};
         const newProfile = nextProps.profile;
         const oldProfile = prevState.profile;
         if(!oldProfile.name && newProfile) {
@@ -98,11 +106,22 @@ class CustomNav extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         const{isAuthenticated} = this.props.auth;
-        if( (prevProps.profile !== this.state.profile) && this.state.profile.name) {
+        if((prevProps.profile !== this.state.profile) && this.state.profile.name) {
             getUserByEmail(this.state.profile.email).then(res => {
+                var userId = res._id;
                 this.setState({userId: res._id});
                 getUserPaintingsById(res._id).then(res => {
                     this.setState({userPaintingList: res});
+                    var arr =[];
+                    res.forEach(function (painting) {
+                        arr.push(painting._id)
+                    });
+                    this.setState({userPaintingIdList: arr});
+                    updateUserPaintings(userId, arr).then(res=> {
+                        console.log(res);
+                    }).catch(err => {
+                        console.error(err);
+                    });
                 }).catch(err => {
                     console.error(err);
                 });
@@ -123,7 +142,7 @@ class CustomNav extends Component {
         var paintingItems = [];
         const paintingArr = this.state.userPaintingList;
         var limit = 5
-        if(paintingArr===[]) {
+        if(paintingArr!==[]) {
             if(paintingArr.length<5) {
                 limit = paintingArr.length
             }
@@ -138,6 +157,7 @@ class CustomNav extends Component {
 
         return (
             <div>
+                {this.state.showSaveModal && <SavePaintingModal show={true} navCallback={this._navSaveNewPaintingCallback} />}
                 {this.state.showTrashModal && <TrashModal show={true} navCallback={this._navTrashCallback} />}
                 {this.state.showPaintingModal && <NewPaintingModal show={true} navCallback={this._navNewPaintingCallback} />}
                 <Navbar inverse collapseOnSelect>

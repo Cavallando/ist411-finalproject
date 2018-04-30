@@ -21,6 +21,11 @@ export function getUserPaintingsById(id) {
   return axios.get(url,{headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}`}}).then(response => response.data)
 }
 
+export function getUserPaintingIdsById(id) {
+  const url = `${DEV_BASE_URL}/api/users/paintings/list/${id}`;
+  return axios.get(url,{headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}`}}).then(response => response.data)
+}
+
 export function getPaintingById(paintId) {
   const url = `${DEV_BASE_URL}/api/paintings/${paintId}`;
   return axios.get(url,{headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}`}}).then(response => response.data)
@@ -36,9 +41,9 @@ export function updatePaintingById(paintId, paintData, userId) {
   return axios.post(url,paintData,{headers: {Authorization: `Bearer ${localStorage.getItem('access_token')}`}}).then(response => response.data)
 }
 
-export function insertNewPainting(userId,paintingId, painting) {
-  const url = `${DEV_BASE_URL}/api/paintings/newpainting/${userId}/${paintingId}`;
-  return axios.post(url, painting.paint_data,{headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}`}}).then(response => response.data)
+export function insertNewPainting(userId, paintingName, paintData) {
+  const url = `${DEV_BASE_URL}/api/paintings/newpainting/${userId}`;
+  return axios.post(url, {"painting_name": paintingName, "paint_data":paintData},{headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}`}}).then(response => response.data)
 }
 
 /*

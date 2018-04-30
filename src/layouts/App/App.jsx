@@ -5,7 +5,7 @@ import { SketchField, Tools } from 'react-sketch';
 import CustomNav from "../../components/Nav/CustomNav";
 import IntroModal from "../../components/Modals/IntroModal";
 import UserProfile from "../../views/UserProfile/UserProfile";
-import { updatePaintingById, getPaintingById, insertNewPainting, getUserById, insertNewUser, getUserByEmail } from '../../utils/PaintifyApi';
+import { updateUserPaintings,updatePaintingById, getPaintingById, insertNewPainting,getUserPaintingsById, getUserById, insertNewUser, getUserByEmail } from '../../utils/PaintifyApi';
 
 class App extends Component {
   constructor(props) {
@@ -22,7 +22,8 @@ class App extends Component {
       userId: "",
       userPaintings: [],
       paintingAvailable: false,
-      currentPainting: {}
+      currentPainting: { paintingName:null,paintingId:null,paintData:null},
+      showSaveModal:false
     };;
   }
 
@@ -93,6 +94,10 @@ class App extends Component {
     });
   }
 
+  _createCallback = (cur) => {
+    this.setState({currentPainting: cur});
+  }
+
   _trashCallback = () => {
     this._canvas.clear();
     this._canvas.setBackgroundFromDataUrl('');
@@ -103,34 +108,45 @@ class App extends Component {
       canUndo: this._canvas.canUndo(),
       canRedo: this._canvas.canRedo(),
       paintingAvailable: false,
-      currentPainting: {}
+      currentPainting: {paintingName:null,paintingId:null,paintData:null}
     })
   }
 
-  _saveCallback = (userId) => {
+  _saveCallback = (userId, cur, paintingList) => {
     var paintData = this._canvas.toJSON();
-    var paintingId = this.state.currentPainting.paintingId;
-    var paintingName = this.state.currentPainting.paintingName;
+    var paintingId = cur.paintingId;
+    var paintingName = cur.paintingName;
+    var paintingListIds = paintingList;
     if (paintingId) {
       //found painting
       updatePaintingById(paintingId, paintData, userId).then(res => {
-        console.log(res);
         this.setState({ currentPainting: { paintingName:paintingName,paintData: paintData, paintingId: res._id } })
       }).catch(err => {
         console.log(err);
       });
     } else {
-      insertNewPainting(userId, paintingName, paintData).then(res => {
-        console.log(res)
-      }).catch(err => {
-        console.error(err);
-      });
+      if(paintingName) {
+        this.setState({showSaveModal: false});
+        insertNewPainting(userId, paintingName, paintData).then(res => {
+          this.setState({currentPainting: {paintData: paintData,paintingId:res, paintingName:paintingName}});
+          getUserPaintingsById(res._id).then(res => {
+            console.log(res);
+          }).catch(err => {
+              console.error(err);
+          });
+        }).catch(err => {
+          console.error(err);
+        });
+      } else {
+        this.setState({showSaveModal: true});
+      }
     }
   }
 
 _loadCallback = (paintingList, cur) => {
   if (this.state.userPaintings !== paintingList) {
     this.setState({ userPaintings: paintingList });
+
   }
   this.setState({ paintingAvailable: true, currentPainting: cur});
 }
@@ -155,8 +171,9 @@ render() {
           saveCallback={this._saveCallback}
           loadCallback={this._loadCallback}
           trashCallback={this._trashCallback}
-          createCallback={this._trashCallback}
+          createCallback={this._createCallback}
           currentPainting={currentPainting}
+          showSaveModal={this.state.showSaveModal}
           {...this.props} />
         <Switch>
           <Route path='/app' render={() => {
@@ -166,7 +183,7 @@ render() {
               tool={this.state.tool}
               lineColor={this.state.paintColor}
               lineWidth={3}
-              value={currentPainting ? currentPainting.paintData : ""}
+              value={currentPainting.paintData ? currentPainting.paintData : ""}
             />);
           }} />
           <Route path="/profile" render={(props) => (
