@@ -5,20 +5,25 @@ class IntroModal extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            showIntro: this.props.show
+            show: this.props.show
         }
     }
+    
     handleClose= ()=> {
-        this.setState({showIntro: false});
+        this.setState({show: false});
     }
 
-    handleLogin= ()=> {
+    handleLogin= () => {
         this.props.auth.login();
+    }
+
+    static getDerivedStateFromProps(nextProps, prevState) {
+        return ({show: nextProps.show});
     }
     
     render() {
         return (
-            <Modal show={this.state.showIntro} onHide={this.handleClose}>
+            <Modal show={this.state.show} onHide={this.handleClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>Welcome to Paintify!</Modal.Title>
                 </Modal.Header>

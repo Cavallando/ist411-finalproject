@@ -4,7 +4,7 @@ import Callback from "../views/Callback/Callback";
 
 const appRoutes = [
   {
-    path: "/app",
+    path: "/paintify",
     name: "Paintify",
     component: App
   },
@@ -12,8 +12,8 @@ const appRoutes = [
     path: "/user",
     name: "User Profile",
     component: UserProfile
-  },
-  { redirect: true, path: "/", to: "/app", name: "Paintify" }
+  }
+  //{ redirect: true, path: "/", to: "/app", name: "Paintify" }
 ];
 
 export default appRoutes;

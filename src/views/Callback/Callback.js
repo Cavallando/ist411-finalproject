@@ -1,27 +1,16 @@
 import React, { Component } from 'react';
 import loading from '../../assets/img/loading.svg';
+import {Redirect,withRouter} from 'react-router-dom';
 
 class Callback extends Component {
-  render() {
-    const style = {
-      position: 'absolute',
-      display: 'flex',
-      justifyContent: 'center',
-      height: '100vh',
-      width: '100vw',
-      top: 0,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: 'white',
-    }
+  constructor(props) {
+    super(props);
+  }
 
-    return (
-      <div style={style}>
-        <img src={loading} alt="loading"/>
-      </div>
-    );
+  render() {
+    return <Redirect to="/app" auth={this.props.auth}/>;
   }
 }
 
-export default Callback;
+
+export default withRouter(Callback);

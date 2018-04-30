@@ -1,24 +1,39 @@
 import React, { Component } from "react";
-import { Route, Switch, Redirect } from "react-router-dom";
+import { Route, Switch, Redirect, withRouter } from "react-router-dom";
 
 import CustomNav from "../../components/Nav/CustomNav";
-import {Tools} from 'react-sketch';
+import { Tools } from 'react-sketch';
 import appRoutes from "../../routes/app.jsx";
+import IntroModal from "../../components/IntroModal/IntroModal";
+import UserProfile from "../../views/UserProfile/UserProfile";
+import AppView from "../../views/App/App";
 
 class App extends Component {
+
   constructor(props) {
     super(props);
-    this.state = {
-      paintColor:"#000000",
-      tool: this.props.tool,
-      profile: this.props.profile
-    }
+    this.state = this.initState();
   }
+
+  initState() {
+    var state = { paintColor: "#000000", tool: this.props.tool, profile: {} };
+    const { isAuthenticated, userProfile, getProfile } = this.props.auth;
+    if (isAuthenticated()) {
+      if (!userProfile) {
+        getProfile((err, profile) => {
+          state.profile = profile;
+        });
+      } else {
+        state.profile = userProfile;
+      }
+    }
+    return state;
+  };
 
   //#region Callbacks
 
   _paletteCallback = (color) => {
-    this.setState({ paintColor: color});
+    this.setState({ paintColor: color });
   }
 
   _toolCallback = (eventKey) => {
@@ -36,11 +51,11 @@ class App extends Component {
     } else if (eventKey === 4.6) {
       toolSelection = Tools.Pan;
     }
-    this.setState({tool: toolSelection});
+    this.setState({ tool: toolSelection });
   }
 
   _undoCallback = () => {
-    if(this._app._canvas.canUndo()) {
+    if (this._app._canvas.canUndo()) {
       this._app._canvas.undo();
     }
     this.setState({
@@ -49,7 +64,7 @@ class App extends Component {
     });
   }
   _redoCallback = () => {
-    if(this._app._canvas.canRedo()) {
+    if (this._app._canvas.canRedo()) {
       this._app._canvas.redo();
     }
     this.setState({
@@ -67,17 +82,33 @@ class App extends Component {
 
   _loadCallback = (id) => {
 
-    if(this.state.currentPainting !== {}) {
-      this.setState({paintingLoaded:true});
+    if (this.state.currentPainting !== {}) {
+      this.setState({ paintingLoaded: true });
     }
   }
   //#endregion Callbacks
 
+  componentWillMount() {
+    const { isAuthenticated, userProfile, getProfile } = this.props.auth;
+
+    if (isAuthenticated()) {
+      if (!userProfile) {
+        getProfile((err, profile) => {
+          this.setState({profile:profile});
+        });
+      } else {
+        this.setState({profile:userProfile});
+      }
+    }
+  }
+  //!isAuthenticated() && <IntroModal show={true} auth={this.props.auth} />}
   render() {
+    const { isAuthenticated } = this.props.auth;
     return (
       <div className="wrapper">
         <div id="main-panel" className="main-panel" ref="mainPanel">
-          <CustomNav auth={this.props.auth} 
+          <CustomNav auth={this.props.auth}
+            profile={this.state.profile}
             paletteCallback={this._paletteCallback}
             toolCallback={this._toolCallback}
             undoCallback={this._undoCallback}
@@ -86,18 +117,18 @@ class App extends Component {
             loadCallback={this._loadCallback}
             {...this.props} />
           <Switch>
-            {appRoutes.map((prop, key) => {
-              if (prop.redirect)
-                return <Redirect from={prop.path} to={prop.to} key={key} />;
-              return (<Route path={prop.path} render={()=>
-                <prop.component 
-                  ref={(c) => this._app = c} 
-                  auth={this.props.auth} 
-                  tool={this.state.tool} 
-                  paintColor={this.state.paintColor}
-                  {...this.props}/>} 
-                  key={key} />);
-            })}
+              <Route path='/app' render={() => {
+                  //handleAuthentication(props);
+                  if(localStorage.getItem('access_token') && localStorage.getItem('id_token'))
+                    this.props.auth.handleAuthentication();
+                  return(<AppView auth={this.props.auth} tool={this.state.tool} paintColor={this.state.paintColor} {...this.props} />);
+              }}/>
+              {isAuthenticated() ?
+              <Route path='/user' render={(props) => {
+                    return(<UserProfile auth={this.props.auth} profile={this.state.profile} tool={this.state.tool} paintColor={this.state.paintColor} {...this.props} />);
+                }}/> :
+                <Redirect to='/app' />
+                }
           </Switch>
         </div>
       </div>
@@ -105,7 +136,7 @@ class App extends Component {
   }
 }
 
-export default App;
+export default withRouter(App);
 
 
 //Old Code

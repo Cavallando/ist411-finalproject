@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { HashRouter, Route, Redirect, Switch } from 'react-router-dom';
+import { BrowserRouter , Route, Redirect, Switch } from 'react-router-dom';
+import Callback from './views/Callback/Callback';
 
 import './assets/css/index.css';
 import App from './layouts/App/App.jsx';
@@ -14,22 +15,18 @@ const handleAuthentication = ({ location }) => {
     auth.handleAuthentication();
   }
 }
-
+//<Route path="/app" render={()=><App auth={auth} />}/>)
 ReactDOM.render(
-  <HashRouter>
+  <BrowserRouter>
     <Switch>
-      {indexRoutes.map((prop, key) => {
-        if (prop.name === "Paintify") {
-          return (<Route path="/" render={()=><prop.component auth={auth} />} key={key} />)
-        } else if (prop.name === "/Callback") { 
-          return (<Route path="/callback" render={(props) => {
+        <Route to="/app" render={(props) => {
             handleAuthentication(props);
-            return <prop.component {...props} />
-          }} />);
+            return <App auth={auth} {...props} />
+          }}/>);
         }
       })}
     </Switch>
-  </HashRouter>,
+  </BrowserRouter>,
   document.getElementById("root")
 );
 /*const Root = () => {
