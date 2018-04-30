@@ -11,7 +11,7 @@ class Palette extends React.Component {
 
   handleChangeComplete = (color, event) => {
     this.setState({ color: color.hex});
-    this.props.callbackFromApp(this.state.color);
+    this.props.paletteCallback(this.state.color);
   };
 
   render() {

@@ -4,18 +4,24 @@
     "description": "Backend server for Paintify App",
     "main": "server.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "node server.js",
-        "dev": "nodemon server.js"
+        "start": "react-scripts start",
+        "start-dev": "nf start -p 3333"
     },
     "author": "Michael Cavallaro",
     "license": "MIT",
     "dependencies": {
-        "body-parser": "^1.15.2",
+        "axios": "^0.18.0",
+        "body-parser": "^1.18.2",
         "cors": "^2.8.1",
         "express": "^4.16.3",
         "express-jwt": "^3.4.0",
+        "foreman": "^2.0.0",
         "jwks-rsa": "^1.2.0",
-        "mongodb": "^3.0.7"
+        "marked": "^0.3.19",
+        "mongodb": "^3.0.7",
+        "mongoose": "^5.0.16",
+        "nf": "0.0.3",
+        "nodemon": "^1.17.3",
+        "react-scripts": "^1.1.4"
     }
 }

@@ -1,12 +1,13 @@
 import React, { Component } from "react";
 import { Route, Switch, Redirect, withRouter } from "react-router-dom";
+import { SketchField, Tools } from 'react-sketch';
 
 import CustomNav from "../../components/Nav/CustomNav";
-import { Tools } from 'react-sketch';
 import appRoutes from "../../routes/app.jsx";
-import IntroModal from "../../components/IntroModal/IntroModal";
+import IntroModal from "../../components/Modals/IntroModal";
 import UserProfile from "../../views/UserProfile/UserProfile";
 import AppView from "../../views/App/App";
+import {getUserById, insertNewUser, getUserByEmail } from '../../utils/PaintifyApi';
 
 class App extends Component {
 
@@ -16,7 +17,17 @@ class App extends Component {
   }
 
   initState() {
-    var state = { paintColor: "#000000", tool: this.props.tool, profile: {} };
+    var state = { paintColor: "#000000", 
+                  tool: this.props.tool,
+                  canUndo: false,
+                  canRedo: false,
+                  controlledValue: null,
+                  backgroundColor: 'transparent',
+                  fillWithBackgroundColor: false, 
+                  authProfile: {},
+                  userId: null,
+                  userPaintings: []};
+    /*
     const { isAuthenticated, userProfile, getProfile } = this.props.auth;
     if (isAuthenticated()) {
       if (!userProfile) {
@@ -27,6 +38,7 @@ class App extends Component {
         state.profile = userProfile;
       }
     }
+    */
     return state;
   };
 
@@ -55,25 +67,34 @@ class App extends Component {
   }
 
   _undoCallback = () => {
-    if (this._app._canvas.canUndo()) {
-      this._app._canvas.undo();
+    if (this._canvas.canUndo()) {
+      this._canvas.undo();
     }
     this.setState({
-      canUndo: this._app._canvas.canUndo(),
-      canRedo: this._app._canvas.canRedo()
+      canUndo: this._canvas.canUndo(),
+      canRedo: this._canvas.canRedo()
     });
   }
   _redoCallback = () => {
-    if (this._app._canvas.canRedo()) {
-      this._app._canvas.redo();
+    if (this._canvas.canRedo()) {
+      this._canvas.redo();
     }
     this.setState({
-      canUndo: this._app._canvas.canUndo(),
-      canRedo: this._app._canvas.canRedo()
+      canUndo: this._canvas.canUndo(),
+      canRedo: this._canvas.canRedo()
     });
   }
 
   _trashCallback = () => {
+    this._canvas.clear();
+        this._canvas.setBackgroundFromDataUrl('');
+        this.setState({
+            controlledValue: null,
+            backgroundColor: 'transparent',
+            fillWithBackgroundColor: false,
+            canUndo: this._canvas.canUndo(),
+            canRedo: this._canvas.canRedo()
+        })
   }
 
   _saveCallback = () => {
@@ -88,19 +109,34 @@ class App extends Component {
   }
   //#endregion Callbacks
 
-  componentWillMount() {
-    const { isAuthenticated, userProfile, getProfile } = this.props.auth;
-
+  
+  static getDerivedStateFromProps = (nextProps, prevState) => {
+    const { isAuthenticated, userProfile, getProfile } = nextProps.auth;
+    var state = {...prevState, user_id: null, userPaintings:[]};
     if (isAuthenticated()) {
       if (!userProfile) {
         getProfile((err, profile) => {
-          this.setState({profile:profile});
+          state.authProfile = profile;
         });
       } else {
-        this.setState({profile:userProfile});
+        state.authProfile = userProfile;
       }
     }
+    console.log(state.authProfile);
+    if(state.authProfile !== {}) {
+      console.log(state.authProfile);
+      if(getUserByEmail(state.authProfile.email)) {
+        let user = getUserByEmail(state.authProfile.email).then(result => console.log(result));
+        state.user_id = getUserById(user._id) 
+        state.userPaintings= user.paintings;
+      } else {
+        insertNewUser({email: state.authProfile.email, name:state.authProfile.name, paintings: []});
+      }
+    }
+    return state;
   }
+
+
   //!isAuthenticated() && <IntroModal show={true} auth={this.props.auth} />}
   render() {
     const { isAuthenticated } = this.props.auth;
@@ -108,20 +144,28 @@ class App extends Component {
       <div className="wrapper">
         <div id="main-panel" className="main-panel" ref="mainPanel">
           <CustomNav auth={this.props.auth}
-            profile={this.state.profile}
+            profile={this.state.authProfile}
             paletteCallback={this._paletteCallback}
             toolCallback={this._toolCallback}
             undoCallback={this._undoCallback}
             redoCallback={this._redoCallback}
             saveCallback={this._saveCallback}
             loadCallback={this._loadCallback}
+            trashCallback={this._trashCallback}
             {...this.props} />
           <Switch>
               <Route path='/app' render={() => {
                   //handleAuthentication(props);
                   if(localStorage.getItem('access_token') && localStorage.getItem('id_token'))
                     this.props.auth.handleAuthentication();
-                  return(<AppView auth={this.props.auth} tool={this.state.tool} paintColor={this.state.paintColor} {...this.props} />);
+                  return(<SketchField
+                          ref={(c) => this._canvas = c}
+                          height='100%'
+                          tool={this.state.tool}
+                          lineColor={this.state.paintColor}
+                          lineWidth={3}
+                          value={this.state.paintingLoaded ? this.state.loadPainting:""}
+                        />);
               }}/>
               {isAuthenticated() ?
               <Route path='/user' render={(props) => {

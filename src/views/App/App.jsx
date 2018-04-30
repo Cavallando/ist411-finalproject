@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { SketchField, Tools } from 'react-sketch';
 import {withRouter} from 'react-router-dom';
-import IntroModal from '../../components/IntroModal/IntroModal';
+import IntroModal from '../../components/Modals/IntroModal';
 import '../../assets/css/App.css';
 import CustomNav from '../../components/Nav/CustomNav';
 
