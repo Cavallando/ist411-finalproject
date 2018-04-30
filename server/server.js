@@ -24,8 +24,8 @@ const authCheck = jwt({
         jwksUri: "https://cavallaro.auth0.com/.well-known/jwks.json"
     }),
     // This is the identifier we set when we created the API
-    audience: '{YOUR-API-AUDIENCE-ATTRIBUTE}',
-    issuer: '{YOUR-AUTH0-DOMAIN}',
+    audience: 'https://paintify.com',
+    iss: 'cavallaro.auth0.com',
     algorithms: ['RS256']
 });
 
@@ -40,14 +40,14 @@ router.get('/', function (req, res) {
   res.json({ message: 'API Initialized!' });
 });
 
-router.route('/user').get(function (req, res) {
+router.route('/user').get(authCheck, function (req, res) {
     User.find(function (err, users) {
       if (err) res.send(err);
 
       res.json(users)
     });
   })
-  .post(function (req, res) {
+  .post(authCheck, function (req, res) {
     var user = new User();
     user.email = req.body.email;
     user.name = req.body.name;
@@ -59,7 +59,7 @@ router.route('/user').get(function (req, res) {
     });
   });
 
-  router.route('/users/id/:user_id').get(function (req, res) {
+  router.route('/users/id/:user_id').get(authCheck,function (req, res) {
     User.findById(req.params.user_id, function(err, user) {
       if (err) {
         return res.send(err);
@@ -68,15 +68,23 @@ router.route('/user').get(function (req, res) {
     });
   });
 
-  router.route('/users/email/:email').get(function (req, res) {
+  router.route('/users/email/:email').get(authCheck, function (req, res) {
     User.findOne({"email":req.params.email}, function(err, user) {
       if (err) res.send(err);
       res.json(user)
     });
   });
 
+  router.route('/users/paintings/:user_id').get(authCheck, function (req, res) {
+    Painting.find({"owner_id":req.params.user_id}, function(err, user) {
+      if (err) res.send(err);
+      res.json(user)
+    });
+  });
+
+
  router.route('/paintings/:painting_id')
-  .put(function(req, res) {
+  .put(authCheck, function(req, res) {
     Painting.findById(req.params.painting_id, function(err, painting) {
       if (err) res.send(err);
 
@@ -93,7 +101,7 @@ router.route('/user').get(function (req, res) {
     });
   })
   //delete method for removing a comment from our database
-  .delete(function(req, res) {
+  .delete(authCheck, function(req, res) {
     //selects the comment by its ID, then removes it.
     Painting.remove({ _id: req.params.comment_id }, function(err, comment) {
       if (err) res.send(err);

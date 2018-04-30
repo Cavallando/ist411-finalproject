@@ -7,18 +7,16 @@ import undoIcon from '../../assets/img/undo.png';
 import redoIcon from '../../assets/img/redo.png';
 import profileIcon from '../../assets/img/profile.png';
 import trashIcon from '../../assets/img/trash.png';
-import { getUserByEmail } from '../../utils/PaintifyApi';
+import { getUserByEmail, getUserPaintingsById } from '../../utils/PaintifyApi';
 import TrashModal from '../Modals/TrashModal';
 
 class CustomNav extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            mongoUserId: "",
-            paintingIDList: [],
-            paintingList: [],
-            isAuthenticated: false,
-            showTrashModal: false
+            userId: "",
+            showTrashModal: false,
+            userPaintingList: []
         }
     }
 
@@ -63,6 +61,28 @@ class CustomNav extends Component {
         this.setState({ showTrashModal: true });
     }
 
+    static getDerivedStateFromProps(nextProps, prevState) {
+        var state = {...prevState}
+        const{isAuthenticated} = nextProps.auth;
+        if(isAuthenticated()) {
+            const profile = nextProps.profile;
+            getUserByEmail(profile).then(res => {
+                state.userId = res._id;
+                getUserPaintingsById(state.userId).then(res => {
+                    state.userPaintingList = res
+                }).catch(err => {
+                    console.error(err);
+                });
+            }).catch(err => {
+                console.error(err);
+            });
+            
+        }
+
+        return state;
+    }
+
+
 
 
     render() {
@@ -73,6 +93,18 @@ class CustomNav extends Component {
                 <MenuItem eventKey={5.2}>My Paintings</MenuItem>
                 <MenuItem eventKey={5.3} onClick={this.logout.bind(this)}>Logout</MenuItem>
             </NavDropdown>))
+        var paintingItems = [];
+        const paintingArr = this.state.userPaintingList;
+        var limit = 5
+        if(paintingArr.length<5) {
+            limit = paintingArr.length
+        }
+        for(var i=0; i<limit; i++) {
+            console.log(paintingArr[i].painting_name);
+            const item = (<MenuItem> paintingArr[i].painting_name </MenuItem>);
+            paintingItems.push(item);
+        }
+        if(!paintingItems)  paintingItems = [<MenuItem eventKey={7.0}>Create a new one!</MenuItem>];
 
         return (
             <div>
@@ -105,6 +137,7 @@ class CustomNav extends Component {
                             </NavItem>
                             <NavItem eventKey={6} onClick={this.props.saveCallback}>Save</NavItem>
                             <NavDropdown onSelect={this.onSelect} eventKey={7} title="Load" id="basic-nav-dropdown">
+                                {paintingItems}
                             </NavDropdown>
                             <NavItem onClick={this.trash}>
                                 <img src={trashIcon} alt="Trash" className="nav-icon" title="Trash" />

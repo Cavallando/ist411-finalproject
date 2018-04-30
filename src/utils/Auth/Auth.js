@@ -7,9 +7,10 @@ export default class Auth {
     domain: AUTH_CONFIG.domain,
     clientID: AUTH_CONFIG.clientId,
     redirectUri: AUTH_CONFIG.callbackUrl,
-    audience: `https://${AUTH_CONFIG.domain}/userinfo`,
+    audience: 'https://paintify.com',//`https://${AUTH_CONFIG.domain}/userinfo`,
     responseType: 'token id_token',
-    scope: 'openid profile'
+    issuer:'cavallaro.auth0.com',
+    scope: 'openid profile email'
   });
 
   userProfile;
@@ -55,7 +56,7 @@ export default class Auth {
   getAccessToken() {
     const accessToken = localStorage.getItem('access_token');
     if (!accessToken) {
-      throw new Error('No access token found');
+      return "null";
     }
     return accessToken;
   }
