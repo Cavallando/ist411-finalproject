@@ -1,9 +1,6 @@
 import React, { Component } from 'react';
 import { SketchField, Tools } from 'react-sketch';
-import {withRouter} from 'react-router-dom';
-import IntroModal from '../../components/Modals/IntroModal';
 import '../../assets/css/App.css';
-import CustomNav from '../../components/Nav/CustomNav';
 
 class App extends Component {
   constructor(props) {
@@ -25,7 +22,6 @@ class App extends Component {
   }
 
   render() {
-    const {isAuthenticated} = this.props.auth;
     return (
       <div>
         <SketchField

@@ -2,6 +2,7 @@
 
 var express = require('express');
 var mongoose = require('mongoose');
+var ObjectID = require('mongodb').ObjectID;
 var bodyParser = require('body-parser');
 var User = require('./model/users');
 var Painting = require('./model/paintings');
@@ -28,7 +29,6 @@ const authCheck = jwt({
     iss: 'cavallaro.auth0.com',
     algorithms: ['RS256']
 });
-
 mongoose.connect('mongodb://admin:admin@ds155577.mlab.com:55577/paintify');
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -59,6 +59,7 @@ router.route('/user').get(authCheck, function (req, res) {
     });
   });
 
+  //function getUserById(user)
   router.route('/users/id/:user_id').get(authCheck,function (req, res) {
     User.findById(req.params.user_id, function(err, user) {
       if (err) {
@@ -68,6 +69,7 @@ router.route('/user').get(authCheck, function (req, res) {
     });
   });
 
+  //function getUserByEmail(user)
   router.route('/users/email/:email').get(authCheck, function (req, res) {
     User.findOne({"email":req.params.email}, function(err, user) {
       if (err) res.send(err);
@@ -75,6 +77,7 @@ router.route('/user').get(authCheck, function (req, res) {
     });
   });
 
+  //function getUserPaintingsById(id) 
   router.route('/users/paintings/:user_id').get(authCheck, function (req, res) {
     Painting.find({"owner_id":req.params.user_id}, function(err, user) {
       if (err) res.send(err);
@@ -82,32 +85,52 @@ router.route('/user').get(authCheck, function (req, res) {
     });
   });
 
-
- router.route('/paintings/:painting_id')
-  .put(authCheck, function(req, res) {
-    Painting.findById(req.params.painting_id, function(err, painting) {
-      if (err) res.send(err);
-
-      (req.body.owner_id) ? painting.owner_id = req.body.owner_id : null;
-      (req.body.painting_name) ? painting.painting_name = req.body.painting_name : null;
-      (req.body.date_created) ? painting.date_created = req.body.date_created : null;
-      (req.body.last_edited_by) ? painting.last_edited_by = req.body.last_edited_by : null;
-      (req.body.paint_data) ? painting.paint_data = req.body.paint_data : null;
-
-      painting.save(function(err) {
-        if (err) res.send(err);
-        res.json({ message: 'Painting has been saved!' });
+  //function updateUserPaintings(userId, paintingList)
+  router.route('/users/paintings/update/:user_id')
+    .post(authCheck, function(req, res){
+      User.findOneAndUpdate({"user_id": req.params.user_id}, req.paintingList, {upsert:true}, function(err, doc){
+        if (err) return res.send(500, { error: err });
+        return res.send("User Painting List successfully updated");
       });
     });
-  })
-  //delete method for removing a comment from our database
-  .delete(authCheck, function(req, res) {
-    //selects the comment by its ID, then removes it.
-    Painting.remove({ _id: req.params.comment_id }, function(err, comment) {
-      if (err) res.send(err);
 
-      res.json({ message: 'Painting has been deleted' })
-    })
+
+  //function updatePaintingById(paintId, painting, userId)
+  router.route('/paintings/update/:painting_id/:user_id')
+    .post(authCheck, function(req, res){
+      var painting = new Painting();
+      painting._id = req.params.painting_id;
+      painting.last_edited_by = req.params.user_id;
+      painting.paint_data = req.body;
+      Painting.findOneAndUpdate({"_id": req.params.painting_id}, painting, {upsert:true}, function(err, doc){
+        if (err) return res.send(err);
+        return res.json(painting);
+      });
+    });
+
+  //function getPaintingsById(paintId)
+  router.route('/paintings/:painting_id').get(authCheck, function (req, res) {
+    Painting.findOne({"_id":req.params.painting_id}, function(err, painting) {
+      if (err) res.send(err);
+      res.json(painting)
+    });
+  });
+
+  //function insertNewPainting(userId, painting)
+ router.route('/paintings/newpainting/:owner_id')
+  .post(authCheck, function(req, res) {
+    var painting = new Painting();
+    painting._id = new ObjectID();
+    painting.owner_id = req.params.owner_id;
+    painting.date_created = Date.now();
+    console.log(req.paintingName);
+    painting.painting_name=req.paintingName;
+    painting.last_edited_by = req.params.owner_id;
+    painting.paint_data = req.paintData;
+    painting.save(function(err,data) {
+      if (err) return res.send(err);
+      return res.json(painting._id);
+    });
   });
 
 //Use our router configuration when we call /api

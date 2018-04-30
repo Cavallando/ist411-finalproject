@@ -5,6 +5,7 @@ import Callback from '../components/Callback/Callback';
 import Auth from '../utils/Auth/Auth';
 import history from '../utils/history';
 import UserProfile from '../views/UserProfile/UserProfile';
+
 const auth = new Auth();
 
 const handleAuthentication = ({location}) => {

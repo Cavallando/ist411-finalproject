@@ -81,6 +81,17 @@ export default class Auth {
     history.replace('/app');
   }
 
+  renewToken() {
+    this.auth0.checkSession({}, (err, result) => {
+        if (err) {
+          console.log(err);
+        } else {
+          this.setSession(result);
+        }
+      }
+    );
+  }
+
   isAuthenticated() {
     // Check whether the current time is past the 
     // access token's expiry time
