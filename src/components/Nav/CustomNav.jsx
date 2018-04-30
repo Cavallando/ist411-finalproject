@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import { Navbar, NavDropdown, MenuItem, Nav, NavItem } from 'react-bootstrap';
-import {withRouter, Redirect} from 'react-router-dom';
+import { withRouter, Redirect } from 'react-router-dom';
 import Palette from '../Palette/Palette';
 import '../../assets/css/CustomNav.css'
 import undoIcon from '../../assets/img/undo.png';
 import redoIcon from '../../assets/img/redo.png';
 import profileIcon from '../../assets/img/profile.png';
 import trashIcon from '../../assets/img/trash.png';
-import {getUserByEmail} from '../../utils/PaintifyApi';
+import { getUserByEmail } from '../../utils/PaintifyApi';
 import TrashModal from '../Modals/TrashModal';
 
 class CustomNav extends Component {
@@ -22,12 +22,24 @@ class CustomNav extends Component {
         }
     }
 
+    goTo(route) {
+        this.props.history.replace(`/${route}`)
+    }
+
+    login() {
+        this.props.auth.login();
+    }
+
+    logout() {
+        this.props.auth.logout();
+    }
+
     _paletteCallback = (color) => {
         this.props.paletteCallback(color);
     }
 
     _navCallback = () => {
-        this.setState({showTrashModal:false});
+        this.setState({ showTrashModal: false });
         this.props.trashCallback();
     }
 
@@ -48,27 +60,27 @@ class CustomNav extends Component {
     }
 
     trash = () => {
-        this.setState({showTrashModal: true});
+        this.setState({ showTrashModal: true });
     }
 
 
 
     render() {
         const { isAuthenticated } = this.props.auth;
-        const showLoginButton = (!isAuthenticated() ? (<NavItem eventKey={1} onClick={() => {this.props.auth.login()}}>Login/Sign up</NavItem>) : 
-        (<NavDropdown onSelect={this.onSelect} eventKey={5} title={<span><img alt="Profile" className="nav-icon" title="Profile" src={profileIcon}></img>  {this.props.profile.name}</span>} id="basic-nav-dropdown">
-            <MenuItem eventKey={5.1} href="/user">My Profile</MenuItem>
-            <MenuItem eventKey={5.2}>My Paintings</MenuItem>
-            <MenuItem eventKey={5.3}>Logout</MenuItem>
-        </NavDropdown>))
+        const showLoginButton = (!isAuthenticated() ? (<NavItem eventKey={1} onClick={() => { this.props.auth.login() }}>Login/Sign up</NavItem>) :
+            (<NavDropdown onSelect={this.onSelect} eventKey={5} title={<span><img alt="Profile" className="nav-icon" title="Profile" src={profileIcon}></img>  {this.props.profile.name}</span>} id="basic-nav-dropdown">
+                <MenuItem eventKey={5.1} onClick={this.goTo.bind(this, 'profile')}>My Profile</MenuItem>
+                <MenuItem eventKey={5.2}>My Paintings</MenuItem>
+                <MenuItem eventKey={5.3} onClick={this.logout.bind(this)}>Logout</MenuItem>
+            </NavDropdown>))
 
         return (
             <div>
                 {this.state.showTrashModal && <TrashModal show={true} navCallback={this._navCallback} />}
                 <Navbar inverse collapseOnSelect>
                     <Navbar.Header>
-                        <Navbar.Brand>
-                            <a href="/app">Paintify</a>
+                        <Navbar.Brand onClick={this.goTo.bind(this,'app')}>
+                            <a>Paintify</a>
                         </Navbar.Brand>
                         <Navbar.Toggle />
                     </Navbar.Header>
@@ -109,4 +121,4 @@ class CustomNav extends Component {
     }
 }
 
-export default withRouter(CustomNav);
+export default CustomNav;

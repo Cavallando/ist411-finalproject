@@ -1,21 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter , Route, Redirect, Switch } from 'react-router-dom';
-import Callback from './views/Callback/Callback';
 
 import './assets/css/index.css';
 import App from './layouts/App/App.jsx';
 import Auth from './utils/Auth/Auth';
 import indexRoutes from "./routes/index.jsx";
-
-const auth = new Auth();
-
-const handleAuthentication = ({ location }) => {
-  if (/access_token|id_token|error/.test(location.hash)) {
-    auth.handleAuthentication();
-  }
-}
+import { makeMainRoutes } from './routes/routes';
 //<Route path="/app" render={()=><App auth={auth} />}/>)
+
+
+const routes = makeMainRoutes();
+
+ReactDOM.render(
+  routes,
+  document.getElementById('root')
+);
+
+/*
 ReactDOM.render(
   <BrowserRouter>
     <Switch>
@@ -29,7 +31,7 @@ ReactDOM.render(
   </BrowserRouter>,
   document.getElementById("root")
 );
-/*const Root = () => {
+const Root = () => {
     return (
       <div className="container">
       <HashRouter>

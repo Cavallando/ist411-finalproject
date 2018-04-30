@@ -40,4 +40,4 @@ class App extends Component {
   }
 }
 
-export default withRouter(App);
+export default App;

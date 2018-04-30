@@ -10,7 +10,6 @@ import AppView from "../../views/App/App";
 import {getUserById, insertNewUser, getUserByEmail } from '../../utils/PaintifyApi';
 
 class App extends Component {
-
   constructor(props) {
     super(props);
     this.state = this.initState();
@@ -27,20 +26,20 @@ class App extends Component {
                   authProfile: {},
                   userId: null,
                   userPaintings: []};
-    /*
-    const { isAuthenticated, userProfile, getProfile } = this.props.auth;
-    if (isAuthenticated()) {
-      if (!userProfile) {
-        getProfile((err, profile) => {
-          state.profile = profile;
-        });
-      } else {
-        state.profile = userProfile;
-      }
-    }
-    */
     return state;
   };
+
+  goTo(route) {
+    this.props.history.replace(`/${route}`)
+  }
+
+  login() {
+    this.props.auth.login();
+  }
+
+  logout() {
+    this.props.auth.logout();
+  }
 
   //#region Callbacks
 
@@ -109,39 +108,14 @@ class App extends Component {
   }
   //#endregion Callbacks
 
-  
-  static getDerivedStateFromProps = (nextProps, prevState) => {
-    const { isAuthenticated, userProfile, getProfile } = nextProps.auth;
-    var state = {...prevState, user_id: null, userPaintings:[]};
-    if (isAuthenticated()) {
-      if (!userProfile) {
-        getProfile((err, profile) => {
-          state.authProfile = profile;
-        });
-      } else {
-        state.authProfile = userProfile;
-      }
-    }
-    console.log(state.authProfile);
-    if(state.authProfile !== {}) {
-      console.log(state.authProfile);
-      if(getUserByEmail(state.authProfile.email)) {
-        let user = getUserByEmail(state.authProfile.email).then(result => console.log(result));
-        state.user_id = getUserById(user._id) 
-        state.userPaintings= user.paintings;
-      } else {
-        insertNewUser({email: state.authProfile.email, name:state.authProfile.name, paintings: []});
-      }
-    }
-    return state;
-  }
 
 
-  //!isAuthenticated() && <IntroModal show={true} auth={this.props.auth} />}
+
   render() {
     const { isAuthenticated } = this.props.auth;
     return (
       <div className="wrapper">
+        {!isAuthenticated() && <IntroModal show={true} auth={this.props.auth} />}
         <div id="main-panel" className="main-panel" ref="mainPanel">
           <CustomNav auth={this.props.auth}
             profile={this.state.authProfile}
@@ -180,7 +154,7 @@ class App extends Component {
   }
 }
 
-export default withRouter(App);
+export default App;
 
 
 //Old Code
