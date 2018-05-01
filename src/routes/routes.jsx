@@ -13,20 +13,20 @@ const handleAuthentication = ({location}) => {
     auth.handleAuthentication();
   }
 }
-
+const baseUrl = process.env.PUBLIC_URL;
 export const makeMainRoutes = () => {
   return (
       <Router history={history}>
         <Switch>
-          <Route path="/app" render={(props) => <App auth={auth} {...props} />} />
-          <Route path="/profile" render={(props) => (
+          <Route path={baseUrl +"/app"} render={(props) => <App auth={auth} {...props} />} />
+          <Route path={baseUrl +"/profile"}  render={(props) => (
             !auth.isAuthenticated() ? (
-              <Redirect to="/app"/>
+              <Redirect to={baseUrl +"/app"} />
             ) : (
               <UserProfile auth={auth} {...props} />
             )
           )} />
-          <Route path="/callback" render={(props) => {
+          <Route path={baseUrl +"/callback"}  render={(props) => {
             handleAuthentication(props);
             return <Callback {...props} /> 
           }}/>
