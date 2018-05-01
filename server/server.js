@@ -21,10 +21,8 @@ const authCheck = jwt({
     cache: true,
     rateLimit: true,
     jwksRequestsPerMinute: 5,
-    // YOUR-AUTH0-DOMAIN name e.g prosper.auth0.com
     jwksUri: "https://cavallaro.auth0.com/.well-known/jwks.json"
   }),
-  // This is the identifier we set when we created the API
   audience: 'https://paintify.com',
   iss: 'cavallaro.auth0.com',
   algorithms: ['RS256']
@@ -131,11 +129,7 @@ router.route('/paintings/newpainting/:owner_id')
     });
   });
 
-
-
-//Use our router configuration when we call /api
 app.use('/api', router);
-//starts the server and listens for requests
 app.listen(port, function () {
   console.log(`api running on port ${port}`);
 });

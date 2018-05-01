@@ -3,8 +3,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-//create new instance of the mongoose.schema. the schema takes an 
-//object that shows the shape of your database entries.
 var PaintingSchema = new Schema({
  owner_id: String,
  painting_name: String,
@@ -13,5 +11,4 @@ var PaintingSchema = new Schema({
  paint_data: Object
 });
 
-//export our module to use in server.js
 module.exports = mongoose.model('Painting', PaintingSchema);
