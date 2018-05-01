@@ -12,8 +12,8 @@ export function getUserByEmail(email) {
 }
 
 export function insertNewUser(user) {
-  const url = `${DEV_BASE_URL}/api/users/newuser`;
-  return axios.post(url, user,{headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}`}}).then(response => response.data)
+  const url = `${DEV_BASE_URL}/api/users/newuser/`;
+  return axios.post(url, {"email": user.email, "name":user.name}, {headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}`}}).then(response => response.data)
 }
 
 export function getUserPaintingsById(id) {
@@ -34,6 +34,11 @@ export function updatePaintingById(paintId, paintData, userId) {
 export function insertNewPainting(userId, paintingName, paintData) {
   const url = `${DEV_BASE_URL}/api/paintings/newpainting/${userId}`;
   return axios.post(url, {"painting_name": paintingName, "paint_data":paintData},{headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}`}}).then(response => response.data)
+}
+
+export function getPaintings() {
+  const url = `${DEV_BASE_URL}/api/paintings`;
+  return axios.get(url,{headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}`}}).then(response => response.data)
 }
 
 /*

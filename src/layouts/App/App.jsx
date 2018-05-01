@@ -5,6 +5,7 @@ import { SketchField, Tools } from 'react-sketch';
 import CustomNav from "../../components/Nav/CustomNav";
 import IntroModal from "../../components/Modals/IntroModal";
 import UserProfile from "../../views/UserProfile/UserProfile";
+import Public from "../../views/Public/Public";
 import { updateUserPaintings, updatePaintingById, getPaintingById, insertNewPainting, getUserPaintingsById, getUserById, insertNewUser, getUserByEmail } from '../../utils/PaintifyApi';
 
 class App extends Component {
@@ -21,10 +22,12 @@ class App extends Component {
       profile: {},
       userId: "",
       userPaintings: [],
+      publicPaintings:[],
       paintingAvailable: false,
       currentPainting: { paintingName: null, paintingId: null, paintData: null, lastModifiedBy: null },
       showSaveModal: false,
-      showSaveSuccess: false
+      showSaveSuccess: false,
+      renderPublic: false
     };;
   }
 
@@ -111,8 +114,13 @@ class App extends Component {
       paintingAvailable: false,
       showSaveSuccess: false,
       showSaveModal:false,
+      renderPublic:false,
       currentPainting: { paintingName: null, paintingId: null, paintData: null, lastModifiedBy: null, ownedBy: null }
     })
+  }
+
+  _publicCallback = (res) => {
+    this.setState({renderPublic: true, publicPaintings:res});
   }
 
   _saveCallback = (userId, cur) => {
@@ -170,7 +178,7 @@ class App extends Component {
     if (this.state.userPaintings !== paintingList) {
       this.setState({ userPaintings: paintingList });
     }
-    var current = cur
+    var current = cur;
     getUserById(ownedId).then(res => {
       current.ownedBy = res.name;
       getUserById(lastId).then(res => {
@@ -183,7 +191,12 @@ class App extends Component {
       console.log(err);
     });
   }
+
+  _publicCallbackTo = (cur) => {
+    this.setState({renderPublic:false, currentPainting:cur});
+  }
   //#endregion Callbacks
+
 
 
   render() {
@@ -208,27 +221,32 @@ class App extends Component {
             currentPainting={currentPainting}
             showSaveModal={this.state.showSaveModal}
             userPaintings={this.state.userPaintings}
+            publicCallback={this._publicCallback}
             showSaveSuccess={this.state.showSaveSuccess}
-            {...this.props} />
+            history={this.props.history} />
           <Switch>
-            <Route path='/app' render={() => {
-              return (<SketchField
-                ref={(c) => this._canvas = c}
-                height='100%'
-                tool={this.state.tool}
-                lineColor={this.state.paintColor}
-                lineWidth={3}
-                value={currentPainting.paintData ? currentPainting.paintData : ""}
-              />);
+            <Route path='/app' render={(props) => {
+              return( 
+                (this.state.renderPublic ===false ?
+                  <SketchField
+                  ref={(c) => this._canvas = c}
+                  height='100%'
+                  tool={this.state.tool}
+                  lineColor={this.state.paintColor}
+                  lineWidth={3}
+                  value={currentPainting.paintData ? currentPainting.paintData : "" }
+                /> : <Public auth={this.props.auth} paintingList={this.state.publicPaintings} publicCallback={this._publicCallbackTo}/>)
+              );
             }} />
-            <Route path="/profile" render={(props) => (
-              !isAuthenticated() ? (
-                <Redirect to="/app" />
-              ) : (
-                  <UserProfile auth={this.props.auth} profile={profile} {...props} />
-                )
-            )} />
-            }
+            <Route path="/profile" component={() => {
+              return(
+                !isAuthenticated() ? (
+                  <Redirect to="/app" />
+                ) : (
+                    <UserProfile auth={this.props.auth} profile={profile}/>
+                  )
+              );
+            }} />
           </Switch>
         </div>
       </div>

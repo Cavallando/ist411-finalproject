@@ -7,7 +7,8 @@ import redoIcon from '../../assets/img/redo.png';
 import profileIcon from '../../assets/img/profile.png';
 import trashIcon from '../../assets/img/trash.png';
 import createIcon from '../../assets/img/create.png';
-import { updateUserPaintings, getUserByEmail, getUserPaintingsById } from '../../utils/PaintifyApi';
+import peopleIcon from '../../assets/img/people.png';
+import { updateUserPaintings, getUserByEmail, getUserPaintingsById, insertNewUser, getPaintings, getUserById } from '../../utils/PaintifyApi';
 import TrashModal from '../Modals/TrashModal';
 import NewPaintingModal from '../Modals/NewPaintingModal';
 import SavePaintingModal from '../Modals/SavePaintingModal';
@@ -23,7 +24,7 @@ class CustomNav extends Component {
             showSaveModal: this.props.showSaveModal,
             showSaveSuccess: this.props.showSaveSuccess,
             currentPainting: this.props.currentPainting,
-            userPaintings: [],
+            userPaintings: this.props.userPaintings,
             profile: profile
         }
         this.componentDidUpdate= this.componentDidUpdate.bind(this);
@@ -90,9 +91,17 @@ class CustomNav extends Component {
     create = () => {
         this.setState({ showPaintingModal: true });
     }
+
     save = () => {
         this.props.saveCallback(this.state.userId, this.state.currentPainting, this.state.userPaintings);
     }
+
+    callback = () => { console.log('all done'); }
+
+    public = () => {
+        this.props.publicCallback(this.state.publicPaintings);
+    }
+
 
     static getDerivedStateFromProps(nextProps, prevState) {
         var state = {...prevState, showSaveModal:nextProps.showSaveModal, userPaintings:nextProps.userPaintings,currentPainting: nextProps.currentPainting};
@@ -111,7 +120,16 @@ class CustomNav extends Component {
                 var userId = res._id;
                 this.setState({userId: res._id});
                 getUserPaintingsById(res._id).then(res => {
-                    this.setState({userPaintings: res});
+                    const paintings = res;
+                    getPaintings().then(res=> {
+                        var arr =[];
+                        paintings.forEach(function (painting) {
+                            arr.push(painting._id)
+                        });
+                        this.setState({userPaintingIdList: arr,publicPaintings:res, userPaintings: paintings});
+                    }).catch(err=>{
+                        console.log(err);
+                    });
                     var arr =[];
                     res.forEach(function (painting) {
                         arr.push(painting._id)
@@ -121,7 +139,11 @@ class CustomNav extends Component {
                     console.error(err);
                 });
             }).catch(err => {
-                console.error(err);
+                insertNewUser(this.state.profile).then(res => {
+                    this.setState({userId: res._id});
+                }).catch(err => {
+                    console.error(err);
+                })
             });
         }
     }
@@ -191,11 +213,11 @@ class CustomNav extends Component {
                             <NavItem onClick={this.trash}>
                                 <img src={trashIcon} alt="Trash" className="nav-icon" title="Trash" />
                             </NavItem>
+                            <NavItem onClick={this.public}>
+                                <img src={peopleIcon} alt="People" className="nav-icon" title="People" />
+                            </NavItem>
                             <NavItem> 
                                 {this.state.showSaveSuccess ? <i>Successfully saved painting</i> : (this.state.currentPainting.paintingName ? <i> Now editing {this.state.currentPainting.paintingName}</i>:<i/>)}
-                            </NavItem>
-                            <NavItem>
-                                {this.state.currentPainting.lastModifiedBy && <i>(Owned by: {this.state.currentPainting.ownedBy} Last modified by: {this.state.currentPainting.lastModifiedBy} </i>}
                             </NavItem>
                         </Nav>
                         <Nav pullRight>
@@ -203,6 +225,7 @@ class CustomNav extends Component {
                         </Nav>
                     </Navbar.Collapse>
                 </Navbar >
+                {this.state.currentPainting.lastModifiedBy && <i>(Owned by: {this.state.currentPainting.ownedBy} Last modified by: {this.state.currentPainting.lastModifiedBy} </i>}
             </div>
         );
 
