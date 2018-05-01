@@ -21,9 +21,9 @@ class CustomNav extends Component {
             showTrashModal: false,
             showPaintingModal: false,
             showSaveModal: this.props.showSaveModal,
+            showSaveSuccess: this.props.showSaveSuccess,
             currentPainting: this.props.currentPainting,
-            userPaintingList: [],
-            userPaintingIdList:[],
+            userPaintings: [],
             profile: profile
         }
         this.componentDidUpdate= this.componentDidUpdate.bind(this);
@@ -61,7 +61,7 @@ class CustomNav extends Component {
         var cur = this.state.currentPainting;
         cur.paintingName = name;
         this.setState({ cur,showSaveModal:false});
-        this.props.saveCallback(this.state.userId,cur);
+        this.props.saveCallback(this.state.userId, cur);
     }
 
     onSelect = (eventKey, syntheticEvent) => {
@@ -75,9 +75,9 @@ class CustomNav extends Component {
                 this.create();
             } else {
                 var paintId = (eventKey % 1).toFixed(1) * 10;
-                var cur = this.state.userPaintingList[paintId-1];
+                var cur = this.state.userPaintings[paintId-1];
                 //this.setState({currentPainting:{ paintingName:cur.painting_name, paintingId:cur._id, paintData:cur.paint_data}});
-                this.props.loadCallback(this.state.userPaintingList, { paintingName:cur.painting_name, paintingId:cur._id, paintData:cur.paint_data});
+                this.props.loadCallback(this.state.userPaintings, {lastModifiedBy:null, ownedBy:null, paintingName:cur.painting_name, paintingId:cur._id, paintData:cur.paint_data},cur.last_edited_by,cur.owner_id);
             }
         }
         this.props.toolCallback(eventKey);
@@ -91,11 +91,11 @@ class CustomNav extends Component {
         this.setState({ showPaintingModal: true });
     }
     save = () => {
-        this.props.saveCallback(this.userId,this.state.currentPainting,this.state.userPaintingList);
+        this.props.saveCallback(this.state.userId, this.state.currentPainting, this.state.userPaintings);
     }
 
     static getDerivedStateFromProps(nextProps, prevState) {
-        var state = {...prevState, showSaveModal:nextProps.showSaveModal,currentPainting: nextProps.currentPainting};
+        var state = {...prevState, showSaveModal:nextProps.showSaveModal, userPaintings:nextProps.userPaintings,currentPainting: nextProps.currentPainting};
         const newProfile = nextProps.profile;
         const oldProfile = prevState.profile;
         if(!oldProfile.name && newProfile) {
@@ -111,17 +111,12 @@ class CustomNav extends Component {
                 var userId = res._id;
                 this.setState({userId: res._id});
                 getUserPaintingsById(res._id).then(res => {
-                    this.setState({userPaintingList: res});
+                    this.setState({userPaintings: res});
                     var arr =[];
                     res.forEach(function (painting) {
                         arr.push(painting._id)
                     });
                     this.setState({userPaintingIdList: arr});
-                    updateUserPaintings(userId, arr).then(res=> {
-                        console.log(res);
-                    }).catch(err => {
-                        console.error(err);
-                    });
                 }).catch(err => {
                     console.error(err);
                 });
@@ -140,9 +135,9 @@ class CustomNav extends Component {
                 <MenuItem eventKey={5.3} onClick={this.logout.bind(this)}>Logout</MenuItem>
             </NavDropdown>))
         var paintingItems = [];
-        const paintingArr = this.state.userPaintingList;
+        const paintingArr = this.state.userPaintings;
         var limit = 5
-        if(paintingArr!==[]) {
+        if(paintingArr.length !==0) {
             if(paintingArr.length<5) {
                 limit = paintingArr.length
             }
@@ -196,7 +191,12 @@ class CustomNav extends Component {
                             <NavItem onClick={this.trash}>
                                 <img src={trashIcon} alt="Trash" className="nav-icon" title="Trash" />
                             </NavItem>
-                            {(this.state.currentPainting.paintingName) && <NavItem> <i> Now editing {this.state.currentPainting.paintingName}</i></NavItem>}
+                            <NavItem> 
+                                {this.state.showSaveSuccess ? <i>Successfully saved painting</i> : (this.state.currentPainting.paintingName ? <i> Now editing {this.state.currentPainting.paintingName}</i>:<i/>)}
+                            </NavItem>
+                            <NavItem>
+                                {this.state.currentPainting.lastModifiedBy && <i>(Owned by: {this.state.currentPainting.ownedBy} Last modified by: {this.state.currentPainting.lastModifiedBy} </i>}
+                            </NavItem>
                         </Nav>
                         <Nav pullRight>
                             {showLoginButton}

@@ -62,7 +62,7 @@ router.route('/user').get(authCheck, function (req, res) {
 
   //function getUserById(user)
   router.route('/users/id/:user_id').get(authCheck,function (req, res) {
-    User.findById(req.params.user_id, function(err, user) {
+    User.findOne({"_id":req.params.user_id}, function(err, user) {
       if (err) {
         return res.send(err);
       }

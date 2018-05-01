@@ -5,7 +5,7 @@ import { SketchField, Tools } from 'react-sketch';
 import CustomNav from "../../components/Nav/CustomNav";
 import IntroModal from "../../components/Modals/IntroModal";
 import UserProfile from "../../views/UserProfile/UserProfile";
-import { updateUserPaintings,updatePaintingById, getPaintingById, insertNewPainting,getUserPaintingsById, getUserById, insertNewUser, getUserByEmail } from '../../utils/PaintifyApi';
+import { updateUserPaintings, updatePaintingById, getPaintingById, insertNewPainting, getUserPaintingsById, getUserById, insertNewUser, getUserByEmail } from '../../utils/PaintifyApi';
 
 class App extends Component {
   constructor(props) {
@@ -22,8 +22,9 @@ class App extends Component {
       userId: "",
       userPaintings: [],
       paintingAvailable: false,
-      currentPainting: { paintingName:null,paintingId:null,paintData:null},
-      showSaveModal:false
+      currentPainting: { paintingName: null, paintingId: null, paintData: null, lastModifiedBy: null },
+      showSaveModal: false,
+      showSaveSuccess: false
     };;
   }
 
@@ -95,7 +96,7 @@ class App extends Component {
   }
 
   _createCallback = (cur) => {
-    this.setState({currentPainting: cur});
+    this.setState({ currentPainting: cur });
   }
 
   _trashCallback = () => {
@@ -108,97 +109,131 @@ class App extends Component {
       canUndo: this._canvas.canUndo(),
       canRedo: this._canvas.canRedo(),
       paintingAvailable: false,
-      currentPainting: {paintingName:null,paintingId:null,paintData:null}
+      showSaveSuccess: false,
+      showSaveModal:false,
+      currentPainting: { paintingName: null, paintingId: null, paintData: null, lastModifiedBy: null, ownedBy: null }
     })
   }
 
-  _saveCallback = (userId, cur, paintingList) => {
+  _saveCallback = (userId, cur) => {
     var paintData = this._canvas.toJSON();
     var paintingId = cur.paintingId;
     var paintingName = cur.paintingName;
-    var paintingListIds = paintingList;
+
     if (paintingId) {
       //found painting
       updatePaintingById(paintingId, paintData, userId).then(res => {
-        this.setState({ currentPainting: { paintingName:paintingName,paintData: paintData, paintingId: res._id } })
+        var current = { paintingName: paintingName, paintData: paintData, paintingId: res._id, ownedBy: cur.ownedBy, lastModifiedBy: null }
+        getUserById(res.last_edited_by).then(res => {
+          current.lastModifiedBy = res.name;
+          getUserPaintingsById(userId).then(res => {
+            this.setState({ showSaveSuccess: true, userPaintings:res,currentPainting: current })
+          }).catch(err => {
+            console.error(err);
+          });
+        }).catch(err => {
+          console.log(err);
+        });
       }).catch(err => {
         console.log(err);
       });
     } else {
-      if(paintingName) {
-        this.setState({showSaveModal: false});
+      if (paintingName) {
+        this.setState({ showSaveModal: false });
         insertNewPainting(userId, paintingName, paintData).then(res => {
-          this.setState({currentPainting: {paintData: paintData,paintingId:res, paintingName:paintingName}});
-          getUserPaintingsById(res._id).then(res => {
-            console.log(res);
+          var current = { lastModifiedBy: null, ownedBy: null, paintData: paintData, paintingId: res, paintingName: paintingName };
+          getUserById(res.owner_id).then(res => {
+            current.ownedBy = res.name;
+            getUserById(res.last_edited_by).then(res => {
+              current.lastModifiedBy = res.name;
+              getUserPaintingsById(userId).then(res => {
+                this.setState({ showSaveSuccess: true, currentPainting: current,userPaintings: res });
+              }).catch(err => {
+                console.error(err);
+              });
+            }).catch(err => {
+              console.log(err);
+            });
           }).catch(err => {
-              console.error(err);
+            console.log(err);
           });
         }).catch(err => {
           console.error(err);
         });
       } else {
-        this.setState({showSaveModal: true});
+        this.setState({ showSaveModal: true });
       }
     }
   }
 
-_loadCallback = (paintingList, cur) => {
-  if (this.state.userPaintings !== paintingList) {
-    this.setState({ userPaintings: paintingList });
-
+  _loadCallback = (paintingList, cur, lastId, ownedId) => {
+    if (this.state.userPaintings !== paintingList) {
+      this.setState({ userPaintings: paintingList });
+    }
+    var current = cur
+    getUserById(ownedId).then(res => {
+      current.ownedBy = res.name;
+      getUserById(lastId).then(res => {
+        current.lastModifiedBy = res.name;
+        this.setState({ paintingAvailable: true,showSaveSuccess: true, currentPainting: current })
+      }).catch(err => {
+        console.log(err);
+      });
+    }).catch(err => {
+      console.log(err);
+    });
   }
-  this.setState({ paintingAvailable: true, currentPainting: cur});
-}
-//#endregion Callbacks
+  //#endregion Callbacks
 
 
-render() {
-  const { isAuthenticated } = this.props.auth;
-  const { profile } = this.state;
-  const {currentPainting} = this.state;
-  return (
-    <div className="wrapper">
-      {!isAuthenticated() && <IntroModal show={true} auth={this.props.auth} />}
-      <div id="main-panel" className="main-panel" ref="mainPanel">
-        <CustomNav auth={this.props.auth}
-          userId={this.state.userId}
-          profile={profile}
-          paletteCallback={this._paletteCallback}
-          toolCallback={this._toolCallback}
-          undoCallback={this._undoCallback}
-          redoCallback={this._redoCallback}
-          saveCallback={this._saveCallback}
-          loadCallback={this._loadCallback}
-          trashCallback={this._trashCallback}
-          createCallback={this._createCallback}
-          currentPainting={currentPainting}
-          showSaveModal={this.state.showSaveModal}
-          {...this.props} />
-        <Switch>
-          <Route path='/app' render={() => {
-            return (<SketchField
-              ref={(c) => this._canvas = c}
-              height='100%'
-              tool={this.state.tool}
-              lineColor={this.state.paintColor}
-              lineWidth={3}
-              value={currentPainting.paintData ? currentPainting.paintData : ""}
-            />);
-          }} />
-          <Route path="/profile" render={(props) => (
-            !isAuthenticated() ? (
-              <Redirect to="/app" />
-            ) : (
-                <UserProfile auth={this.props.auth} profile={profile} {...props} />
-              )
-          )} />
-          }
+  render() {
+    const { isAuthenticated } = this.props.auth;
+    const { profile } = this.state;
+    const { currentPainting } = this.state;
+    return (
+      <div className="wrapper">
+        {!isAuthenticated() && <IntroModal show={true} auth={this.props.auth} />}
+        <div id="main-panel" className="main-panel" ref="mainPanel">
+          <CustomNav auth={this.props.auth}
+            userId={this.state.userId}
+            profile={profile}
+            paletteCallback={this._paletteCallback}
+            toolCallback={this._toolCallback}
+            undoCallback={this._undoCallback}
+            redoCallback={this._redoCallback}
+            saveCallback={this._saveCallback}
+            loadCallback={this._loadCallback}
+            trashCallback={this._trashCallback}
+            createCallback={this._createCallback}
+            currentPainting={currentPainting}
+            showSaveModal={this.state.showSaveModal}
+            userPaintings={this.state.userPaintings}
+            showSaveSuccess={this.state.showSaveSuccess}
+            {...this.props} />
+          <Switch>
+            <Route path='/app' render={() => {
+              return (<SketchField
+                ref={(c) => this._canvas = c}
+                height='100%'
+                tool={this.state.tool}
+                lineColor={this.state.paintColor}
+                lineWidth={3}
+                value={currentPainting.paintData ? currentPainting.paintData : ""}
+              />);
+            }} />
+            <Route path="/profile" render={(props) => (
+              !isAuthenticated() ? (
+                <Redirect to="/app" />
+              ) : (
+                  <UserProfile auth={this.props.auth} profile={profile} {...props} />
+                )
+            )} />
+            }
           </Switch>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 }
 
 export default App;
