@@ -15,18 +15,13 @@ class TrashModal extends Component {
 
     delete = () => {
         this.setState({show: false});
-        this.props.navCallback();
-    }
-
-
-    static getDerivedStateFromProps(nextProps, prevState) {
-        return ({show: nextProps.show});
+        this.props.navCallback(false);
     }
     
     render() {
         return (
             <Modal show={this.state.show} onHide={this.handleClose}>
-                <Modal.Header closeButton>
+                <Modal.Header>
                     <Modal.Title>Are you sure you want to throw all your hard work in the trash? </Modal.Title>
                 </Modal.Header>
                 <Modal.Footer>

@@ -1,7 +1,8 @@
 import axios from 'axios';
+const DEV = false;
 const DEV_BASE_URL = 'http://localhost:3333';
 const PROD_BASE_URL = 'https://paintify-backend.herokuapp.com';
-
+const URL = DEV ? DEV_BASE_URL : PROD_BASE_URL;
 export function getUserById(userId) {
   const url = `${PROD_BASE_URL}/api/users/id/${userId}`;
   return axios.get(url,{headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}`}}).then(response => response.data);

@@ -12,17 +12,18 @@ class NewPaintingModal extends Component {
 
     handleClose = () => {
         this.setState({ show: false });
+        this.props.navCallback(this.state.value, false);
     }
 
     create = () => {
         this.setState({ show: false });
-        this.props.navCallback(this.state.value);
+        this.props.navCallback(this.state.value, false);
     }
 
     handleChange = (e) =>{
         this.setState({ value: e.target.value });
       }
-
+    
     static getDerivedStateFromProps(nextProps, prevState) {
         return ({ show: nextProps.show });
     }
@@ -30,7 +31,7 @@ class NewPaintingModal extends Component {
     render() {
         return (
             <Modal show={this.state.show} onHide={this.handleClose}>
-                <Modal.Header closeButton>
+                <Modal.Header>
                     <Modal.Title>New Painting</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>

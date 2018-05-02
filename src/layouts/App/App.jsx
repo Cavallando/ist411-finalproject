@@ -5,7 +5,7 @@ import { SketchField, Tools } from 'react-sketch';
 import CustomNav from "../../components/Nav/CustomNav";
 import IntroModal from "../../components/Modals/IntroModal";
 import UserProfile from "../../views/UserProfile/UserProfile";
-import Public from "../../views/Public/Public";
+import Paintings from "../../views/Paintings/Paintings";
 import { updateUserPaintings, updatePaintingById, getPaintingById, insertNewPainting, getUserPaintingsById, getUserById, insertNewUser, getUserByEmail } from '../../utils/PaintifyApi';
 
 class App extends Component {
@@ -26,6 +26,7 @@ class App extends Component {
       paintingAvailable: false,
       currentPainting: { paintingName: null, paintingId: null, paintData: null, lastModifiedBy: null },
       showSaveModal: false,
+      showCreateModal: false,
       showSaveSuccess: false,
       renderPublic: false
     };;
@@ -99,31 +100,39 @@ class App extends Component {
   }
 
   _createCallback = (cur) => {
-    this.setState({ currentPainting: cur });
+    this._trashCallback();
+    this.setState({renderPublic: false,currentPainting: cur });
   }
 
   _trashCallback = () => {
-    this._canvas.clear();
-    this._canvas.setBackgroundFromDataUrl('');
-    this.setState({
-      controlledValue: null,
-      backgroundColor: 'transparent',
-      fillWithBackgroundColor: false,
-      canUndo: this._canvas.canUndo(),
-      canRedo: this._canvas.canRedo(),
-      paintingAvailable: false,
-      showSaveSuccess: false,
-      showSaveModal:false,
-      renderPublic:false,
-      currentPainting: { paintingName: null, paintingId: null, paintData: null, lastModifiedBy: null, ownedBy: null }
-    })
+    if(this._canvas) {
+      this._canvas.clear();
+      this._canvas.setBackgroundFromDataUrl('');
+      this.setState({
+        controlledValue: null,
+        backgroundColor: 'transparent',
+        fillWithBackgroundColor: false,
+        canUndo: this._canvas.canUndo(),
+        canRedo: this._canvas.canRedo(),
+        paintingAvailable: false,
+        showSaveSuccess: false,
+        showSaveModal:false,
+        showCreateModal: false,
+        renderPublic:false,
+        currentPainting: { paintingName: null, paintingId: null, paintData: null, lastModifiedBy: null, ownedBy: null }
+      });
+    }
   }
 
   _publicCallback = (res) => {
-    this.setState({renderPublic: true, publicPaintings:res});
+    this.setState({renderPublic: true, publicPaintings: res});
   }
 
-  _saveCallback = (userId, cur) => {
+  _myPaintingsCallback = (res) => {
+    this.setState({renderPublic: true, userPaintings: res});
+  }
+
+  _saveCallback = (userId, cur, show) => {
     var paintData = this._canvas.toJSON();
     var paintingId = cur.paintingId;
     var paintingName = cur.paintingName;
@@ -147,7 +156,7 @@ class App extends Component {
       });
     } else {
       if (paintingName) {
-        this.setState({ showSaveModal: false });
+        this.setState({ showSaveModal: show });
         insertNewPainting(userId, paintingName, paintData).then(res => {
           var current = { lastModifiedBy: null, ownedBy: null, paintData: paintData, paintingId: res, paintingName: paintingName };
           getUserById(res.owner_id).then(res => {
@@ -175,9 +184,7 @@ class App extends Component {
   }
 
   _loadCallback = (paintingList, cur, lastId, ownedId) => {
-    if (this.state.userPaintings !== paintingList) {
-      this.setState({ userPaintings: paintingList });
-    }
+    this.setState({ userPaintings: paintingList });
     var current = cur;
     getUserById(ownedId).then(res => {
       current.ownedBy = res.name;
@@ -192,8 +199,18 @@ class App extends Component {
     });
   }
 
-  _publicCallbackTo = (cur) => {
-    this.setState({renderPublic:false, currentPainting:cur});
+  _publicCallbackFromPublic = (cur, isNew) => {
+    const painting = this.state.currentPainting;
+    if(isNew) {
+      this.setState({showCreateModal: true});
+    } else if(cur.paint_data) {
+      painting.paintData = cur.paint_data;
+      painting.paintingId = cur._id;
+      painting.paintingName = cur.painting_name;
+      this._loadCallback(this.state.userPaintings, painting, cur.last_edited_by, cur.owner_id);
+      
+    }
+    this.setState({renderPublic:false});
   }
   //#endregion Callbacks
 
@@ -218,8 +235,10 @@ class App extends Component {
             loadCallback={this._loadCallback}
             trashCallback={this._trashCallback}
             createCallback={this._createCallback}
+            myPaintingsCallback={this._myPaintingsCallback}
             currentPainting={currentPainting}
             showSaveModal={this.state.showSaveModal}
+            showCreateModal ={this.state.showCreateModal}
             userPaintings={this.state.userPaintings}
             publicCallback={this._publicCallback}
             showSaveSuccess={this.state.showSaveSuccess}
@@ -235,7 +254,7 @@ class App extends Component {
                   lineColor={this.state.paintColor}
                   lineWidth={3}
                   value={currentPainting.paintData ? currentPainting.paintData : "" }
-                /> : <Public auth={this.props.auth} paintingList={this.state.publicPaintings} publicCallback={this._publicCallbackTo}/>)
+                /> : <Paintings auth={this.props.auth} myPaintings= {this.state.userPaintings} paintingList={this.state.publicPaintings} publicCallback={this._publicCallbackFromPublic}/>)
               );
             }} />
             <Route path="/profile" component={() => {

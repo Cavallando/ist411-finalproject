@@ -16,15 +16,11 @@ class IntroModal extends Component {
     handleLogin= () => {
         this.props.auth.login();
     }
-
-    static getDerivedStateFromProps(nextProps, prevState) {
-        return ({show: nextProps.show});
-    }
     
     render() {
         return (
             <Modal show={this.state.show} onHide={this.handleClose}>
-                <Modal.Header closeButton>
+                <Modal.Header>
                     <Modal.Title>Welcome to Paintify!</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>

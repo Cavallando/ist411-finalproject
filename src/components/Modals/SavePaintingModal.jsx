@@ -16,21 +16,17 @@ class SavePaintingModal extends Component {
 
     create = () => {
         this.setState({ show: false });
-        this.props.navCallback(this.state.value);
+        this.props.navCallback(this.state.value, false);
     }
 
     handleChange = (e) =>{
         this.setState({ value: e.target.value });
       }
 
-    static getDerivedStateFromProps(nextProps, prevState) {
-        return ({ show: nextProps.show });
-    }
-
     render() {
         return (
             <Modal show={this.state.show} onHide={this.handleClose}>
-                <Modal.Header closeButton>
+                <Modal.Header>
                     <Modal.Title>New Painting</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>

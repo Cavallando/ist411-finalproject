@@ -1,12 +1,12 @@
+
 .nav-icon {
     width:20;
     height: 20;
     opacity: .5;
-  }
+}
   .nav-icon:hover {
     opacity: 1
   }
-  .container {
-    width: 100%;
-  }
+
   .navbar-right { margin-right: 0px !important}
+  

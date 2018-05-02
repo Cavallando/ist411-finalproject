@@ -14,6 +14,7 @@ const handleAuthentication = ({location}) => {
   }
 }
 const baseUrl = process.env.PUBLIC_URL;
+
 export const makeMainRoutes = () => {
   return (
       <Router history={history}>
